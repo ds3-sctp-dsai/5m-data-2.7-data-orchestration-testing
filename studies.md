@@ -42,7 +42,7 @@ Please complete the following activities before our session.
 * Why might we need a tool like **Dagster** to manage both Meltano (ingestion) and dbt (transformation)?  
 * What is the benefit of defining a schedule in code (Python) versus clicking a button manually every day?
 
-### 🙌🏻 Active Engagement Strategies
+## 🙌🏻 Active Engagement Strategies
 
 To deepen your retention, try one of the following while you review:
 
@@ -50,7 +50,7 @@ To deepen your retention, try one of the following while you review:
 * **"Code Commentary":** Select a specific code block from the notebook and write a brief comment explaining, in your own words, exactly what logical step it performs.  
 * **Scenario Matching:** Think of a recent project where data quality was an issue. Which "Expectation" from the reading could have prevented that error?
 
-### 📖 Additional Reading Material
+## 📖 Additional Reading Material
 
 - [What is Data Testing](https://www.montecarlodata.com/blog-data-testing-vs-data-quality-monitoring-vs-data-observability-whats-right-for-your-team/)
 - [Data Testing](https://www.getdbt.com/analytics-engineering/transformation/data-testing)
