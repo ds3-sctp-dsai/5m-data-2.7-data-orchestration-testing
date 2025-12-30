@@ -118,7 +118,7 @@ Let's add some tests to check the column types in `fact_sales`:
 
 --- 
 
-## Extra - Hands-on with Orchestration I
+## Extra - Hands-on with Orchestration I (Self-Study)
 If you have not, create the conda environment based on the `dagster_environment.yml` file in the [environment](https://github.com/su-ntu-ctp/5m-data-2.1-intro-big-data-eng/tree/main/environments) folder. 
 
 We will be using the `dagster` environment. Use the command `conda activate dagster` to activate the environment.
@@ -149,7 +149,7 @@ After the configuration above, we can run dagster using the command below:
 dagster dev
 ```
 
-## Extra - Hands-on with Orchestration II
+## Extra - Hands-on with Orchestration II (Self-Study)
 
 In the previous unit, combining Meltano and Dbt, we have an end-to-end ELT (data ingestion and transformation) pipeline. However, we ran the pipelines manually. Now, we will use Dagster to orchestrate the pipelines and schedule them to run periodically.
 
