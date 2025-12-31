@@ -37,7 +37,7 @@ conda activate elt
 Please see the notebook GX_lessons.ipynb
 
 
-## Part 2 - Testing Dbt
+## Part 2 - Testing Dbt (dbt Expectation)
 
 Back in unit 2.5, we configured some simple tests in dbt to check for _null values_, _uniqueness_ and _foreign key constraints_. We have copied the dbt project `liquor_sales` from unit 2.5 to this unit, located in the `extra` folder. You can find the tests in the `schema.yml` files in the `/models` directory.
 
