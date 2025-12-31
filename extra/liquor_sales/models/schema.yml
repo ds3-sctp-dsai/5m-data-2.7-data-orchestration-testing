@@ -35,5 +35,6 @@ models:
     #   - dbt_utils.expression_is_true:
     #       arguments:
     #         expression: "ROUND(sale_dollars, 1) = TRUNC(bottles_sold * state_bottle_retail, 1)"
+    #         severity: error # accepts only `error` and `warn` default is error
 
 
