@@ -1,5 +1,8 @@
 version: 2
 
+# The following schema works with Python 3.11 and above
+# Comment the line 'arguments:' to work on older versions of dbt (Python 3.10 and below)
+
 models:
   - name: fact_sales
     description: "Fact table for item."
@@ -10,27 +13,27 @@ models:
           - unique
           - not_null
           # - dbt_expectations.expect_column_values_to_be_of_type:
-          #     column_type: string
+          #     arguments:
+          #       column_type: string
       - name: store_number
         description: "The foreign key to the store dimension table"
         tests:
           - relationships:
-              # Uncomment the line 'arguments:' to resolve
-              # MissingArgumentsPropertyInGenericTestDeprecation Warnings
-              # Warnings appear Python 3.11 environment
-              # 'arguments:' will not work in older versions of dbt (Python 3.10 and below)
-              #arguments:
+              arguments:
                 to: ref('dim_store')
                 field: store_number
-      - name: date
-        tests:
-          # - dbt_utils.accepted_range:
-          #     min_value: "PARSE_DATE('%F', '2012-01-01')"
-          #     max_value: "CURRENT_DATE()"
+      # - name: date
+      #   tests:
+      #     - dbt_utils.accepted_range:
+      #         arguments:
+      #           min_value: "PARSE_DATE('%F', '2012-01-01')"
+      #           max_value: "CURRENT_DATE()"
           # - dbt_expectations.expect_column_values_to_be_of_type:
-          #     column_type: date
+          #     arguments:
+          #       column_type: date
     # tests:
     #   - dbt_utils.expression_is_true:
-    #       expression: "ROUND(sale_dollars, 1) = TRUNC(bottles_sold * state_bottle_retail, 1)"
+    #       arguments:
+    #         expression: "ROUND(sale_dollars, 1) = TRUNC(bottles_sold * state_bottle_retail, 1)"
 
 
