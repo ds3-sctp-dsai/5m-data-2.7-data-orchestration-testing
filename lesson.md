@@ -78,10 +78,16 @@ Note that the expression below involves multiple columns, and hence the test mus
 ```yml
 tests:
   - dbt_utils.expression_is_true:
-      expression: "ROUND(sale_dollars, 1) = TRUNC(bottles_sold * state_bottle_retail, 1)"
+      arguments:
+        expression: "ROUND(sale_dollars, 1) = TRUNC(bottles_sold * state_bottle_retail, 1)"
+        severity: error # accepts only `error` and `warn` default is error
 ```
 
 Here, we use `ROUND` to round the values to 1 decimal place and compare them.
+
+> The arguments `severity` allows you to treat a test if it is an error or it is a warning in data drift.
+> We can add conditions such as `error_if` or `warn_if` for different situation.
+> Please consult dbt documentation at https://docs.getdbt.com/reference/resource-configs/severity
 
 Run the tests using `dbt test` (recall you will first need to run `dbt debug`, then run `dbt snapshot` to create the snapshot tables, then run `dbt run` to create the fact and dim tables). Observe which tests pass and which fail.
 
