@@ -49,9 +49,13 @@ conda activate elt
 
 We will be using the same `elt` conda environment. The `liquor_sales` dbt project folder is under `extra` folder. Use the command `cd extra/liquor_sales` to navigate to the folder.
 
+```bash
+cd extra/liquor_sales
+```
+
 > To facilitate coding in class, all the following code are written but commented out. Please uncomment each section, please block them and use the key combination  (Mac:`cmd+/` or WSL:`ctrl+/`) to uncomment the configuration. 
 
-Create a new `packages.yml` file:
+Open the file`packages.yml`:
 
 ```yml
 packages:
@@ -87,7 +91,9 @@ tests:
 
 Here, we use `ROUND` to round the values to 1 decimal place and compare them.
 
-> The arguments `severity` allows you to treat a test if it is an error or it is a warning in data drift.
+> **Optional:**
+> 
+> The arguments `severity` allows you to treat a test as if it is an error or it is a warning in data drift.
 > We can also add additional conditions such as `error_if` or `warn_if` for different situation.
 > Please consult dbt documentation at https://docs.getdbt.com/reference/resource-configs/severity
 
@@ -98,7 +104,7 @@ dbt debug
 ```
 
 ```bash
-dbt dbt snapshot
+dbt snapshot
 ```
 
 ```bash
@@ -109,9 +115,9 @@ dbt run
 dbt test
 ```
 
-> The command `dbt build` combine `dbt run` and `dbt test`.
+> The command `dbt build` combine `dbt snapshot`, `dbt run` and `dbt test`.
 
-Observe which tests pass and which fail.
+**Observe which tests pass and which fail.**
 
 > 1. Run a SQL query to check which rows failed.
 > 2. Run a SQL query to get the min and max values of `pack` and `bottle_volume_ml` in `liquor_sales_star.dim_item`.
@@ -176,6 +182,16 @@ After the configuration above, we can run dagster using the command below:
 ```bash
 dagster dev
 ```
+
+Please check the following screenshot:
+
+[Dagster Screenshot - Three Jobs](./assets/dagster1_1.png)
+
+[Dagster Screenshot - pandas_job](./assets/dagster1_2.png)
+
+[Dagster Screenshot - pipeline_one_job](./assets/dagster1_3.png)
+
+[Dagster Screenshot - dbt_pipeline](./assets/dagster1_4.png)
 
 ## Extra - Hands-on with Orchestration II Using Dagster Subprocess (Self-Study)
 
@@ -251,7 +267,7 @@ from dagster import (
     load_assets_from_modules,
 )
 # import all assets
-import meltano-orchestration.assets as assets_module
+import meltano_orchestration.assets as assets_module
 
 all_assets = load_assets_from_modules([assets_module])
 
@@ -283,9 +299,11 @@ Then start the UI by running
 dagster dev
 ```
 
-Then click 'Launch run'. We have just executed the `meltano run tap-github target-bigquery` command from within Dagster. After the pipeline, we also run `dbt build`.
+Under `Jobs` click 'Materialized all'. We have just executed the `meltano run tap-github target-bigquery` command follow by `dbt build` from within Dagster.
 
-## Extra - Hands-on with Orchestration III (Self-Study)
+![alt text](assets/dagster2_1.png)
+
+## Extra - Hands-on with Orchestration III - Using Dagtser with dbt (Self-Study)
 
 ### Using Dbt with Dagster
 
@@ -331,7 +349,9 @@ cd resale_flat_dagster
 DAGSTER_DBT_PARSE_PROJECT_ON_LOAD=1 dagster dev
 ```
 
-We can now trigger the Dbt pipeline from within Dagster by selecting the assets and clicking 'Materialize selected'.
+We can now trigger the Dbt pipeline from within Dagster by selecting the assets and clicking `Materialize all` under `Lineage`.
+
+![dagster_lineage](assets/dagster3_2.png)
 
 To set up the scheduler, follow the steps below.
 
@@ -377,4 +397,4 @@ Now in the Dagster UI, click 'Reload definitions' and you will see the new sched
 
 Toggle on the scheduler(see red box in screenshot below) and your job will run at the scheduled time.
 
-![dagster scheduler image](./assets/dagster_scheduler.png)
+![assets/dagster3_1.png](assets/dagster3_1.png)
