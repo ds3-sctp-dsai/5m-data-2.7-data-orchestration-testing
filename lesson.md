@@ -49,6 +49,8 @@ However, the built-in tests are limited in scope and functionality. We can expan
 
 We will be using the same `elt` conda environment. The `liquor_sales` dbt project folder is under `extra` folder. Use the command `cd extra/liquor_sales` to navigate to the folder.
 
+> To facilitate coding in class, all the following code are written but commented out. Please uncomment each section, please block them and use the key combination  (Mac:`cmd+/` or WSL:`ctrl+/`) to uncomment the configuration. 
+
 Create a new `packages.yml` file:
 
 ```yml
@@ -86,10 +88,30 @@ tests:
 Here, we use `ROUND` to round the values to 1 decimal place and compare them.
 
 > The arguments `severity` allows you to treat a test if it is an error or it is a warning in data drift.
-> We can add conditions such as `error_if` or `warn_if` for different situation.
+> We can also add additional conditions such as `error_if` or `warn_if` for different situation.
 > Please consult dbt documentation at https://docs.getdbt.com/reference/resource-configs/severity
 
-Run the tests using `dbt test` (recall you will first need to run `dbt debug`, then run `dbt snapshot` to create the snapshot tables, then run `dbt run` to create the fact and dim tables). Observe which tests pass and which fail.
+Run the following code in order:
+
+```bash
+dbt debug
+```
+
+```bash
+dbt dbt snapshot
+```
+
+```bash
+dbt run
+```
+
+```bash
+dbt test
+```
+
+> The command `dbt build` combine `dbt run` and `dbt test`.
+
+Observe which tests pass and which fail.
 
 > 1. Run a SQL query to check which rows failed.
 > 2. Run a SQL query to get the min and max values of `pack` and `bottle_volume_ml` in `liquor_sales_star.dim_item`.
@@ -155,7 +177,7 @@ After the configuration above, we can run dagster using the command below:
 dagster dev
 ```
 
-## Extra - Hands-on with Orchestration II (Self-Study)
+## Extra - Hands-on with Orchestration II Using Dagster Subprocess (Self-Study)
 
 In the previous unit, combining Meltano and Dbt, we have an end-to-end ELT (data ingestion and transformation) pipeline. However, we ran the pipelines manually. Now, we will use Dagster to orchestrate the pipelines and schedule them to run periodically.
 
@@ -173,30 +195,85 @@ First, we will create a Dagster project and use it to orchestrate the Meltano pi
 
 ```bash
 dagster project scaffold --name meltano-orchestration
+```
+
+```bash
 cd meltano-orchestration
 ```
 
-### Using the Dagster-Meltano library
+### Using the Dagster Subprocess
+
+Replace the content of `meltano-orchestration/meltano_orchestration/assets.py` with the following:
+
+```python
+# assets.py
+from dagster import asset
+import subprocess
+
+
+@asset
+def pipeline_meltano()->None:
+    """
+    Runs meltano tap-postgres target-bigquery
+    """
+    cmd = ["meltano", "run", "tap-postgres", "target-bigquery"]
+    # path to meltano folder
+    cwd = '/path/to/your/folder/meltano_resale_in_lesson_2_6'
+    try:
+        output= subprocess.check_output(cmd,cwd=cwd,stderr=subprocess.STDOUT).decode()
+    except subprocess.CalledProcessError as e:
+            output = e.output.decode()
+            raise Exception(output)
+
+@asset(deps=[pipeline_meltano])
+def pipeline_dbt_run()->None:
+    """
+    Runs dbt build 
+    """
+    cmd = ["dbt", "build"]
+    cwd = '/path/to/your/folder/resale_flat_in_lesson_2_6'
+    try:
+        output= subprocess.check_output(cmd,cwd=cwd,stderr=subprocess.STDOUT).decode()
+    except subprocess.CalledProcessError as e:
+            output = e.output.decode()
+            raise Exception(output)
+```
+
 
 Replace the content of `meltano-orchestration/meltano_orchestration/definitions.py` with the following:
 
 ```python
-from dagster import Definitions, ScheduleDefinition, job
-from dagster_meltano import meltano_resource, meltano_run_op
+# definitions.py
+from dagster import (
+    Definitions,
+    ScheduleDefinition,
+    define_asset_job,
+    load_assets_from_modules,
+)
+# import all assets
+import meltano-orchestration.assets as assets_module
 
+all_assets = load_assets_from_modules([assets_module])
 
-@job(resource_defs={"meltano": meltano_resource})
-def run_elt_job():
-   tap_done = meltano_run_op("tap-github target-bigquery")()
+# Complete ELT pipeline job
+elt_job = define_asset_job(
+    name="daily_elt_pipeline",
+    selection="*",
+    description="Meltano extraction → dbt transformation → data quality tests"
+)
 
-# Addition: a ScheduleDefinition the job it should run and a cron schedule of how frequently to run it
-elt_schedule = ScheduleDefinition(
-    job=run_elt_job,
-    cron_schedule="0 0 * * *",  # every day at midnight
+# Daily schedule at 2 AM
+daily_schedule = ScheduleDefinition(
+    job=elt_job,
+    cron_schedule="0 2 * * *",
+    name="daily_elt_schedule",
+    description="Daily resale data pipeline"
 )
 
 defs = Definitions(
-    schedules=[elt_schedule],
+    assets=all_assets,
+    jobs=[elt_job],
+    schedules=[daily_schedule],
 )
 ```
 
@@ -206,25 +283,9 @@ Then start the UI by running
 dagster dev
 ```
 
-### Launching a Test Run of the Schedule
+Then click 'Launch run'. We have just executed the `meltano run tap-github target-bigquery` command from within Dagster. After the pipeline, we also run `dbt build`.
 
-Look for the 'Launchpad' tab after clicking on the job name in the left nav.
-
-When initiating a run in Dagster, we have to pass along configuration variables at run time such as the location of the Meltano project:
-
-```yml
-resources:
-  meltano:
-    config:
-      project_dir: #full-path-to-the-meltano-ingestion-project-directory
-ops:
-  tap_github_target_bigquery:
-    config:
-      env:
-        TAP_GITHUB_AUTH_TOKEN: #your-github-personal-access-tokens
-```
-
-Then click 'Launch run'. We have just executed the `meltano run tap-github target-bigquery` command from within Dagster.
+## Extra - Hands-on with Orchestration III (Self-Study)
 
 ### Using Dbt with Dagster
 
@@ -236,7 +297,7 @@ First, activate the conda environment.
 conda activate dagster
 ```
 
-Create a file named `profiles.yml` in the `resale_flat` dbt project directory in Unit 2.6 with the following content:
+make sure the `profiles.yml` in the `resale_flat` dbt project directory in Unit 2.6 is similar with the following format:
 
 ```yml
 resale_flat:
@@ -255,7 +316,7 @@ resale_flat:
   target: dev
 ```
 
-Please use the above format in order to be compatible with dagster. 
+Please use the above format in order to be compatible with Dagster. 
 
 Then create a new Dagster project that points to the directory.
 
