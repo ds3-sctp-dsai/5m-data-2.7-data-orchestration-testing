@@ -189,7 +189,7 @@ We can orchestrate Meltano and Dbt pipelines using Dagster. By executing the com
 
 ### Create a Dagster Project
 
-We will be using the meltano project we created in module 2.6. Make sure we are not in any subfolder.
+We will be using the meltano project we created in module 2.6. Make sure we are not in any subfolder. The pre-requisite of this exercise is that you need to complete the exercise to create a meltano project that extract data from Postgres and load into BigQuery. You also need to complete the exercise to create a HDB resale dbt project in lesson 2.6.
 
 First, we will create a Dagster project and use it to orchestrate the Meltano pipelines.
 
@@ -203,7 +203,7 @@ cd meltano-orchestration
 
 ### Using the Dagster Subprocess
 
-Replace the content of `meltano-orchestration/meltano_orchestration/assets.py` with the following:
+Replace the content of `meltano-orchestration/meltano_orchestration/assets.py` with the following and also please change the path `cwd = '/path/to/your/folder/meltano_resale_in_lesson_2_6'`  and `cwd = '/path/to/your/folder/resale_flat_in_lesson_2_6'` with your respective path in lesson 2.6:
 
 ```python
 # assets.py
