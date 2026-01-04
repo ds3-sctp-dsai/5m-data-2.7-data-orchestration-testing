@@ -28,13 +28,7 @@ Great Expectations is an open-source library for data testing. It is a Python li
 
 ### Create a Great Expectations Project (Data Context)
 
-First, reactivate the conda environment.
-
-```bash
-conda activate elt
-```
-
-Please see the notebook GX_lessons.ipynb
+Please see the notebook GX_lessons.ipynb, please attached `elt` environment to the notebook.
 
 
 ## Part 2 - Testing Dbt (dbt Expectation)
@@ -47,6 +41,12 @@ However, the built-in tests are limited in scope and functionality. We can expan
 
 ### Installing and Configuring `dbt_utils`
 
+First, reactivate the conda environment.
+
+```bash
+conda activate elt
+```
+
 We will be using the same `elt` conda environment. The `liquor_sales` dbt project folder is under `extra` folder. Use the command `cd extra/liquor_sales` to navigate to the folder.
 
 > To facilitate coding in class, all the following code are written but commented out. Please uncomment each section, please block them and use the key combination  (Mac:`cmd+/` or WSL:`ctrl+/`) to uncomment the configuration. 
@@ -56,7 +56,7 @@ Create a new `packages.yml` file:
 ```yml
 packages:
   - package: dbt-labs/dbt_utils
-    version: 1.3.0
+    version: 1.3.3
 ```
 
 Run `dbt deps` to install the package. Refer to the [documentation](https://hub.getdbt.com/dbt-labs/dbt_utils/latest/) for supported tests.
@@ -123,7 +123,7 @@ Add the following to `packages.yml`:
 
 ```yml
 - package: metaplane/dbt_expectations
-  version: 0.10.9
+  version: 0.10.10
 ```
 
 Run `dbt deps` to install the package. Refer to the [documentation](https://hub.getdbt.com/calogica/dbt_expectations/latest/) for supported tests.
