@@ -28,7 +28,7 @@ Great Expectations is an open-source library for data testing. It is a Python li
 
 ### Create a Great Expectations Project (Data Context)
 
-Please see the notebook GX_lessons.ipynb, please attached `elt` environment to the notebook.
+Please see the notebook [GX_lessons.ipynb](GX_lessons.ipynb), please attached `elt` environment to the notebook.
 
 
 ## Part 2 - Testing Dbt (dbt Expectation)
@@ -104,6 +104,10 @@ dbt debug
 ```
 
 ```bash
+dbt deps
+```
+
+```bash
 dbt snapshot
 ```
 
@@ -146,6 +150,9 @@ Let's add some tests to check the column types in `fact_sales`:
     - dbt_expectations.expect_column_values_to_be_of_type:
         column_type: date
 ```
+
+> Don't forget to run `dbt deps` again
+
 
 > 1. Add type tests for all the columns in `fact_sales`, `dim_item` and `dim_store`.
 > 2. Can you think of any other tests that we can add to the models?
@@ -391,7 +398,7 @@ defs = Definitions(
 )
 ```
 
-Now in the Dagster UI, click 'Reload definitions' and you will see the new schedule.
+Now in the Dagster UI, click `Reload definitions` and you will see the new schedule.
 
 Toggle on the scheduler(see red box in screenshot below) and your job will run at the scheduled time.
 
