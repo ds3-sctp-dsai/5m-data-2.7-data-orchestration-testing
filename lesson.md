@@ -209,6 +209,8 @@ We will be using the meltano project we created in module 2.6. Make sure we are 
 
 First, we will create a Dagster project and use it to orchestrate the Meltano pipelines.
 
+> Warning: Don't forget we need to start a new folder under `5m-data-2.7-data-orchestration-testing`
+
 ```bash
 dagster project scaffold --name meltano-orchestration
 ```
