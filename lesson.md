@@ -151,9 +151,6 @@ Let's add some tests to check the column types in `fact_sales`:
         column_type: date
 ```
 
-> Don't forget to run `dbt deps` again
-
-
 > 1. Add type tests for all the columns in `fact_sales`, `dim_item` and `dim_store`.
 > 2. Can you think of any other tests that we can add to the models?
 
