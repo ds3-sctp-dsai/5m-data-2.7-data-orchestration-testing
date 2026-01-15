@@ -223,36 +223,30 @@ Replace the content of `meltano-orchestration/meltano_orchestration/assets.py` w
 
 ```python
 # assets.py
-from dagster import asset
-import subprocess
-
+from dagster import asset, AssetExecutionContext, PipesSubprocessClient
 
 @asset
-def pipeline_meltano()->None:
+def pipeline_meltano(context: AssetExecutionContext, pipes_subprocess_client: PipesSubprocessClient):
     """
-    Runs meltano tap-postgres target-bigquery
+    Runs meltano using Dagster Pipes for better logging and observability.
     """
-    cmd = ["meltano", "run", "tap-postgres", "target-bigquery"]
-    # path to meltano folder
-    cwd = '/path/to/your/folder/meltano_resale_in_lesson_2_6'
-    try:
-        output= subprocess.check_output(cmd,cwd=cwd,stderr=subprocess.STDOUT).decode()
-    except subprocess.CalledProcessError as e:
-            output = e.output.decode()
-            raise Exception(output)
+    return pipes_subprocess_client.run(
+        command=["meltano", "run", "tap-postgres", "target-bigquery"],
+        context=context,
+        cwd = '/path/to/your/folder/meltano_resale_in_lesson_2_6'
+    ).get_results()
 
 @asset(deps=[pipeline_meltano])
-def pipeline_dbt_run()->None:
+def pipeline_dbt_run(context: AssetExecutionContext, pipes_subprocess_client: PipesSubprocessClient):
     """
-    Runs dbt build 
+    Runs dbt build using Dagster Pipes.
     """
-    cmd = ["dbt", "build"]
-    cwd = '/path/to/your/folder/resale_flat_in_lesson_2_6'
-    try:
-        output= subprocess.check_output(cmd,cwd=cwd,stderr=subprocess.STDOUT).decode()
-    except subprocess.CalledProcessError as e:
-            output = e.output.decode()
-            raise Exception(output)
+    return pipes_subprocess_client.run(
+        command=["dbt", "build"],
+        context=context,
+        cwd = '/path/to/your/folder/resale_flat_in_lesson_2_6'
+    ).get_results()
+
 ```
 
 
@@ -265,20 +259,18 @@ from dagster import (
     ScheduleDefinition,
     define_asset_job,
     load_assets_from_modules,
+    PipesSubprocessClient, # 1. Import the client
 )
-# import all assets
 import meltano_orchestration.assets as assets_module
 
 all_assets = load_assets_from_modules([assets_module])
 
-# Complete ELT pipeline job
 elt_job = define_asset_job(
     name="daily_elt_pipeline",
     selection="*",
     description="Meltano extraction → dbt transformation → data quality tests"
 )
 
-# Daily schedule at 2 AM
 daily_schedule = ScheduleDefinition(
     job=elt_job,
     cron_schedule="0 2 * * *",
@@ -290,6 +282,10 @@ defs = Definitions(
     assets=all_assets,
     jobs=[elt_job],
     schedules=[daily_schedule],
+    # 2. Add the resource here
+    resources={
+        "pipes_subprocess_client": PipesSubprocessClient(),
+    },
 )
 ```
 
