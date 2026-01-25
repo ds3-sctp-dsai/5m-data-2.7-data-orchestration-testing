@@ -12,6 +12,8 @@ models:
       - name: new_last_name
         description: Customer's last name that we processed
         tests:
-          - unique
+          - unique:
+              arguments:
+                severity: error # accepts only `error` and `warn` default: error
           - not_null
 

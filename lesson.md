@@ -28,16 +28,10 @@ Great Expectations is an open-source library for data testing. It is a Python li
 
 ### Create a Great Expectations Project (Data Context)
 
-First, reactivate the conda environment.
-
-```bash
-conda activate elt
-```
-
-Please see the notebook GX_lessons.ipynb
+Please see the notebook [GX_lessons.ipynb](GX_lessons.ipynb), please attached `elt` environment to the notebook.
 
 
-## Part 2 - Testing Dbt
+## Part 2 - Testing Dbt (dbt Expectation)
 
 Back in unit 2.5, we configured some simple tests in dbt to check for _null values_, _uniqueness_ and _foreign key constraints_. We have copied the dbt project `liquor_sales` from unit 2.5 to this unit, located in the `extra` folder. You can find the tests in the `schema.yml` files in the `/models` directory.
 
@@ -47,14 +41,26 @@ However, the built-in tests are limited in scope and functionality. We can expan
 
 ### Installing and Configuring `dbt_utils`
 
+First, reactivate the conda environment.
+
+```bash
+conda activate elt
+```
+
 We will be using the same `elt` conda environment. The `liquor_sales` dbt project folder is under `extra` folder. Use the command `cd extra/liquor_sales` to navigate to the folder.
 
-Create a new `packages.yml` file:
+```bash
+cd extra/liquor_sales
+```
+
+> To facilitate coding in class, all the following code are written but commented out. Please uncomment each section, please block them and use the key combination  (Mac:`cmd+/` or WSL:`ctrl+/`) to uncomment the configuration. 
+
+Open the file`packages.yml`:
 
 ```yml
 packages:
   - package: dbt-labs/dbt_utils
-    version: 1.3.0
+    version: 1.3.3
 ```
 
 Run `dbt deps` to install the package. Refer to the [documentation](https://hub.getdbt.com/dbt-labs/dbt_utils/latest/) for supported tests.
@@ -78,12 +84,44 @@ Note that the expression below involves multiple columns, and hence the test mus
 ```yml
 tests:
   - dbt_utils.expression_is_true:
-      expression: "ROUND(sale_dollars, 1) = TRUNC(bottles_sold * state_bottle_retail, 1)"
+      arguments:
+        expression: "ROUND(sale_dollars, 1) = TRUNC(bottles_sold * state_bottle_retail, 1)"
+        severity: error # accepts only `error` and `warn` default is error
 ```
 
 Here, we use `ROUND` to round the values to 1 decimal place and compare them.
 
-Run the tests using `dbt test` (recall you will first need to run `dbt debug`, then run `dbt snapshot` to create the snapshot tables, then run `dbt run` to create the fact and dim tables). Observe which tests pass and which fail.
+> **Optional:**
+> 
+> The arguments `severity` allows you to treat a test as if it is an error or it is a warning in data drift.
+> We can also add additional conditions such as `error_if` or `warn_if` for different situation.
+> Please consult dbt documentation at https://docs.getdbt.com/reference/resource-configs/severity
+
+Run the following code in order:
+
+```bash
+dbt debug
+```
+
+```bash
+dbt deps
+```
+
+```bash
+dbt snapshot
+```
+
+```bash
+dbt run
+```
+
+```bash
+dbt test
+```
+
+> The command `dbt build` combine `dbt snapshot`, `dbt run` and `dbt test`.
+
+**Observe which tests pass and which fail.**
 
 > 1. Run a SQL query to check which rows failed.
 > 2. Run a SQL query to get the min and max values of `pack` and `bottle_volume_ml` in `liquor_sales_star.dim_item`.
@@ -95,7 +133,7 @@ Add the following to `packages.yml`:
 
 ```yml
 - package: metaplane/dbt_expectations
-  version: 0.10.9
+  version: 0.10.10
 ```
 
 Run `dbt deps` to install the package. Refer to the [documentation](https://hub.getdbt.com/calogica/dbt_expectations/latest/) for supported tests.
@@ -118,7 +156,7 @@ Let's add some tests to check the column types in `fact_sales`:
 
 --- 
 
-## Extra - Hands-on with Orchestration I
+## Extra - Hands-on with Orchestration I (Optional)
 If you have not, create the conda environment based on the `dagster_environment.yml` file in the [environment](https://github.com/su-ntu-ctp/5m-data-2.1-intro-big-data-eng/tree/main/environments) folder. 
 
 We will be using the `dagster` environment. Use the command `conda activate dagster` to activate the environment.
@@ -149,7 +187,17 @@ After the configuration above, we can run dagster using the command below:
 dagster dev
 ```
 
-## Extra - Hands-on with Orchestration II
+Please check the following screenshot:
+
+[Dagster Screenshot - Three Jobs](./assets/dagster1_1.png)
+
+[Dagster Screenshot - pandas_job](./assets/dagster1_2.png)
+
+[Dagster Screenshot - pipeline_one_job](./assets/dagster1_3.png)
+
+[Dagster Screenshot - dbt_pipeline](./assets/dagster1_4.png)
+
+## Extra - Hands-on with Orchestration II Using Dagster Subprocess (Optional)
 
 In the previous unit, combining Meltano and Dbt, we have an end-to-end ELT (data ingestion and transformation) pipeline. However, we ran the pipelines manually. Now, we will use Dagster to orchestrate the pipelines and schedule them to run periodically.
 
@@ -161,36 +209,89 @@ We can orchestrate Meltano and Dbt pipelines using Dagster. By executing the com
 
 ### Create a Dagster Project
 
-We will be using the meltano project we created in module 2.6. Make sure we are not in any subfolder.
+We will be using the meltano project we created in module 2.6. Make sure we are not in any subfolder. The pre-requisite of this exercise is that you need to complete the exercise to create a meltano project that extract data from Postgres and load into BigQuery. You also need to complete the exercise to create a HDB resale dbt project in lesson 2.6.
 
 First, we will create a Dagster project and use it to orchestrate the Meltano pipelines.
 
+> Warning: Don't forget we need to start a new folder under `5m-data-2.7-data-orchestration-testing`
+
 ```bash
 dagster project scaffold --name meltano-orchestration
+```
+
+```bash
 cd meltano-orchestration
 ```
 
-### Using the Dagster-Meltano library
+### Using the Dagster Subprocess
+
+Replace the content of `meltano-orchestration/meltano_orchestration/assets.py` with the following and also please change the path `cwd = '/path/to/your/folder/meltano_resale_in_lesson_2_6'`  and `cwd = '/path/to/your/folder/resale_flat_in_lesson_2_6'` with your respective path in lesson 2.6:
+
+```python
+# assets.py
+from dagster import asset, AssetExecutionContext, PipesSubprocessClient
+
+@asset
+def pipeline_meltano(context: AssetExecutionContext, pipes_subprocess_client: PipesSubprocessClient):
+    """
+    Runs meltano using Dagster Pipes for better logging and observability.
+    """
+    return pipes_subprocess_client.run(
+        command=["meltano", "run", "tap-postgres", "target-bigquery"],
+        context=context,
+        cwd = '/path/to/your/folder/meltano_resale_in_lesson_2_6'
+    ).get_results()
+
+@asset(deps=[pipeline_meltano])
+def pipeline_dbt_run(context: AssetExecutionContext, pipes_subprocess_client: PipesSubprocessClient):
+    """
+    Runs dbt build using Dagster Pipes.
+    """
+    return pipes_subprocess_client.run(
+        command=["dbt", "build"],
+        context=context,
+        cwd = '/path/to/your/folder/resale_flat_in_lesson_2_6'
+    ).get_results()
+
+```
+
 
 Replace the content of `meltano-orchestration/meltano_orchestration/definitions.py` with the following:
 
 ```python
-from dagster import Definitions, ScheduleDefinition, job
-from dagster_meltano import meltano_resource, meltano_run_op
+# definitions.py
+from dagster import (
+    Definitions,
+    ScheduleDefinition,
+    define_asset_job,
+    load_assets_from_modules,
+    PipesSubprocessClient, # 1. Import the client
+)
+import meltano_orchestration.assets as assets_module
 
+all_assets = load_assets_from_modules([assets_module])
 
-@job(resource_defs={"meltano": meltano_resource})
-def run_elt_job():
-   tap_done = meltano_run_op("tap-github target-bigquery")()
+elt_job = define_asset_job(
+    name="daily_elt_pipeline",
+    selection="*",
+    description="Meltano extraction → dbt transformation → data quality tests"
+)
 
-# Addition: a ScheduleDefinition the job it should run and a cron schedule of how frequently to run it
-elt_schedule = ScheduleDefinition(
-    job=run_elt_job,
-    cron_schedule="0 0 * * *",  # every day at midnight
+daily_schedule = ScheduleDefinition(
+    job=elt_job,
+    cron_schedule="0 2 * * *",
+    name="daily_elt_schedule",
+    description="Daily resale data pipeline"
 )
 
 defs = Definitions(
-    schedules=[elt_schedule],
+    assets=all_assets,
+    jobs=[elt_job],
+    schedules=[daily_schedule],
+    # 2. Add the resource here
+    resources={
+        "pipes_subprocess_client": PipesSubprocessClient(),
+    },
 )
 ```
 
@@ -200,25 +301,11 @@ Then start the UI by running
 dagster dev
 ```
 
-### Launching a Test Run of the Schedule
+Under `Jobs` click 'Materialized all'. We have just executed the `meltano run tap-github target-bigquery` command follow by `dbt build` from within Dagster.
 
-Look for the 'Launchpad' tab after clicking on the job name in the left nav.
+![alt text](assets/dagster2_1.png)
 
-When initiating a run in Dagster, we have to pass along configuration variables at run time such as the location of the Meltano project:
-
-```yml
-resources:
-  meltano:
-    config:
-      project_dir: #full-path-to-the-meltano-ingestion-project-directory
-ops:
-  tap_github_target_bigquery:
-    config:
-      env:
-        TAP_GITHUB_AUTH_TOKEN: #your-github-personal-access-tokens
-```
-
-Then click 'Launch run'. We have just executed the `meltano run tap-github target-bigquery` command from within Dagster.
+## Extra - Hands-on with Orchestration III - Using Dagtser with dbt (Optional)
 
 ### Using Dbt with Dagster
 
@@ -230,7 +317,7 @@ First, activate the conda environment.
 conda activate dagster
 ```
 
-Create a file named `profiles.yml` in the `resale_flat` dbt project directory in Unit 2.6 with the following content:
+make sure the `profiles.yml` in the `resale_flat` dbt project directory in Unit 2.6 is similar with the following format:
 
 ```yml
 resale_flat:
@@ -249,7 +336,7 @@ resale_flat:
   target: dev
 ```
 
-Please use the above format in order to be compatible with dagster. 
+Please use the above format in order to be compatible with Dagster. 
 
 Then create a new Dagster project that points to the directory.
 
@@ -264,7 +351,9 @@ cd resale_flat_dagster
 DAGSTER_DBT_PARSE_PROJECT_ON_LOAD=1 dagster dev
 ```
 
-We can now trigger the Dbt pipeline from within Dagster by selecting the assets and clicking 'Materialize selected'.
+We can now trigger the Dbt pipeline from within Dagster by selecting the assets and clicking `Materialize all` under `Lineage`.
+
+![dagster_lineage](assets/dagster3_2.png)
 
 To set up the scheduler, follow the steps below.
 
@@ -306,8 +395,8 @@ defs = Definitions(
 )
 ```
 
-Now in the Dagster UI, click 'Reload definitions' and you will see the new schedule.
+Now in the Dagster UI, click `Reload definitions` and you will see the new schedule.
 
 Toggle on the scheduler(see red box in screenshot below) and your job will run at the scheduled time.
 
-![dagster scheduler image](./assets/dagster_scheduler.png)
+![assets/dagster3_1.png](assets/dagster3_1.png)
