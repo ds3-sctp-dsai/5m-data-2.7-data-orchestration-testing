@@ -71,8 +71,9 @@ Let's add some additional tests to the `fact_sales` model at the end of `models/
 - name: date
   tests:
     - dbt_utils.accepted_range:
-        min_value: "PARSE_DATE('%F', '2012-01-01')"
-        max_value: "CURRENT_DATE()"
+        arguments:
+            min_value: "PARSE_DATE('%F', '2012-01-01')"
+            max_value: "CURRENT_DATE()"
 ```
 
 Here, we are using `dbt_utils.accepted_range` to check if the `date` field is within the range of `2012-01-01` and `CURRENT_DATE()`.
@@ -144,11 +145,13 @@ Let's add some tests to check the column types in `fact_sales`:
 - name: invoice_and_item_number
   tests:
     - dbt_expectations.expect_column_values_to_be_of_type:
-        column_type: string
+        arguments:
+            column_type: string
 - name: date
   tests:
     - dbt_expectations.expect_column_values_to_be_of_type:
-        column_type: date
+        arguments:
+            column_type: date
 ```
 
 > 1. Add type tests for all the columns in `fact_sales`, `dim_item` and `dim_store`.
